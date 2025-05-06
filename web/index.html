@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie's Box-Office Revenue Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            margin: 20px;
+            padding: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            color: #444;
+        }
+
+        input, select, button {
+            font: inherit;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 16px;
+            text-align: center;
+            color: #333;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            background-color: white;
+            max-height: 150px;
+            overflow-y: auto;
+            width: calc(100% - 20px); /* Ensure the dropdown matches input field width */
+        }
+        
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff; 
+            border-bottom: 1px solid #d4d4d4; 
+        }
+        
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9; 
+        }
+        
+        .autocomplete-active {
+            background-color: #007BFF !important; 
+            color: #ffffff; 
+        }
+        
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: -15px;
+            margin-bottom: 10px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 20px; /* Increased font size */
+            text-align: center;
+            color: #333;
+        }
+
+        .tooltip {
+            color: #1f8b8a;
+            border-bottom: 1px dashed #1d7b77;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tooltip:before {
+            display: block;
+            position: absolute;
+            content: attr(data-title);
+            opacity: 0;
+
+            width: 300px;
+            height:fit-content;
+            bottom: 30px;
+            left: 100%;
+            margin-left: -100px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.85);
+            box-sizing: border-box;
+            text-align: center;
+            color: white;
+
+            visibility: hidden;
+        }
+
+        .tooltip:hover:before {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container"> 
+    <h1>Movie's Box-Office Revenue Prediction</h1>
+    <form id="prediction-form" style="position: relative;">
+        <div><i>Pre-released information</i> <font color="red">*</font></div>
+        <hr width="100%" size="1">  
+        <label for="genres"><span class="tooltip" data-title="Genre of the film. You can specify multiple genres.">Genres</span>:</label>
+        <select id="genres" multiple style="height: 180px;">
+            <option>Adventure</option>
+            <option>Fantasy</option>
+            <option>Family</option>
+            <option>Comedy</option>
+            <option>Drama</option>
+            <option>Romance</option>
+            <option>Action</option>
+            <option>Crime</option>
+            <option>Thriller</option>
+            <option>History</option>
+            <option>Science Fiction</option>
+            <option>Mystery</option>
+            <option>Animation</option>
+            <option>Horror</option>
+            <option>War</option>
+            <option>Foreign</option>
+            <option>Documentary</option>
+            <option>Music</option>
+            <option>Western</option>
+        </select>
+        
+        <label for="runtime"><span class="tooltip" data-title="The duration of the movie is in minutes. Must be greater than 0.">Runtime</span>:</label>
+        <input type="number" id="runtime" name="runtime" required>
+
+        <label for="domestic_distributor"><span class="tooltip" data-title="A company responsible for distributing a movie within a specific country or region, typically the country where the film was produced.">Domestic Distributor</span>:</label>
+        <input type="text" id="domestic_distributor" name="domestic_distributor" required>
+        <div class="error" id="distributor-error"></div>
+
+        <label for="mpaa"><span class="tooltip" data-title="A system used to classify films according to their suitability for different audiences in the United States.">MPAA Rating</span>:</label>
+        <input type="text" id="mpaa" name="mpaa" required>
+        <div class="error"id="mpaa-error"></div>
+
+        <label for="budget"><span class="tooltip" data-title="Budget of the film in USD. Must be greater than 0.">Budget</span></label>
+        <input type="number" min="1" id="budget" name="budget" required>
+        <div class="error" id="budget-error"></div>
+
+        <label for="director"><span class="tooltip" data-title="The person responsible for overseeing and managing the creative aspects of a film.">Director</span>:</label>
+        <input type="text" id="director" name="director" required>
+        <div class="error" id="director-error"></div>
+
+        <label for="production_company"><span class="tooltip" data-title="A business entity responsible for the development and physical production of films.">Production Company</span>:</label>
+        <input type="text" id="production_company" name="production_company" required>
+        <div class="error" id="production_company-error"></div>
+
+        <label for="production_country"><span class="tooltip" data-title="Countries where film will be shot.">Production Country</span>:</label>
+        <input type="text" id="production_country" name="production_country" required>
+        <div class="error" id="production_country-error"></div>
+
+        <label for="actor_1"><span class="tooltip" data-title="The individual who plays the main character or protagonist around whom the story revolves">Leading Actor (actress)</span>:</label>
+        <input type="text" id="actor_1" name="actor_1" required>
+        <div class="error" id="actor_1-error"></div>
+
+        <label for="actor_2"><span class="tooltip" data-title="An actor who plays a role that is significant to the story but not as central as the leading actor's role">First supporting actor (actress)</span>:</label>
+        <input type="text" id="actor_2" name="actor_2" required>
+        <div class="error" id="actor_2-error"></div>
+
+        <label for="actor_3"><span class="tooltip" data-title="An actor who plays a role that is significant to the story but not as central as the leading actor's role">Second supporting actor (actress)</span>:</label>
+        <input type="text" id="actor_3" name="actor_3" required>
+        <div class="error" id="actor_3-error"></div>
+
+        <label for="release_month"><span class="tooltip" data-title="Month when the film is officially made available to the public. Must be between 1 and 12.">Release Month</span>:</label>
+        <input type="number" id="release_month" name="release_month" min="1" max="12" required>
+
+        <div><i>Post-released information<br>(if you specify one field, you need to fill in the rest in this block)</i></div>
+        <hr width="100%" size="1">
+
+        <label for="vote_average"><span class="tooltip" data-title="Average score of the film by users and critics on the relevant websites. Must be between 0 and 10.">Vote Average</span>:</label>
+        <input type="number" step="0.1" id="vote_average" name="vote_average" min="0" max="10" required>
+
+        <label for="domestic_opening"><span class="tooltip" data-title="Initial box office performance of a movie within its home country over its opening weekend. Currency: USD. Must be greater than 0.">Domestic Opening</span>:</label>
+        <input type="number" id="domestic_opening" name="domestic_opening" required>
+
+        <div><i>Additional information</i></div>
+        <hr width="100%" size="1">
+        
+        <label for="poster"><span class="tooltip" data-title="A visual marketing tool designed to promote a film and generate interest among potential audiences.">Poster</span>:</label>
+        <input type="file" id="uploadPoster" accept="image/*">
+
+        <label for="trailer"><span class="tooltip" data-title="A promotional video designed to generate interest and excitement about an upcoming film.">Trailer</span>:</label>
+        <input type="file" id="uploadTrailer" accept="video/*">
+        
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+    
+    <div id="result"></div>
+</div>
+
+<script>
+    function fetchData(endpoint, callback) {
+        fetch(`http://localhost:5000/api/${endpoint}`)
+            .then(response => response.json())
+            .then(data => callback(data))
+            .catch(error => console.error(`Error fetching ${endpoint}:`, error));
+    }
+
+    function autocomplete(input, array) {
+        let currentFocus;
+        input.addEventListener("input", function() {
+            let list, item, val = this.value;
+            closeAllLists();
+            if (!val) return false;
+            currentFocus = -1;
+            
+            list = document.createElement("div");
+            list.setAttribute("id", this.id + "autocomplete-list");
+            list.setAttribute("class", "autocomplete-items");
+            list.style.left = input.offsetLeft + "px";
+            list.style.top = input.offsetTop + input.offsetHeight + "px";
+            list.style.width = input.offsetWidth + "px";
+            input.parentNode.appendChild(list);
+
+            for (let i = 0; i < array.length; i++) {
+                if (array[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
+                    item = document.createElement("div");
+                    item.innerHTML = "<strong>" + array[i].substr(0, val.length) + "</strong>";
+                    item.innerHTML += array[i].substr(val.length);
+                    item.innerHTML += "<input type='hidden' value='" + array[i] + "'>";
+                    item.addEventListener("click", function() {
+                        input.value = this.getElementsByTagName("input")[0].value;
+                        closeAllLists();
+                    });
+                    list.appendChild(item);
+                }
+            }
+        });
+
+        input.addEventListener("keydown", function(e) {
+            let x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode === 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode === 38) {
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode === 13) {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    if (x) x[currentFocus].click();
+                }
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+
+        function removeActive(x) {
+            for (let i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            const items = document.getElementsByClassName("autocomplete-items");
+            for (let i = 0; i < items.length; i++) {
+                if (elmnt !== items[i] && elmnt !== input) {
+                    items[i].parentNode.removeChild(items[i]);
+                }
+            }
+        }
+
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchData('domestic_distributor', data => autocomplete(document.getElementById('domestic_distributor'), data));
+        fetchData('mpaa', data => autocomplete(document.getElementById('mpaa'), data));
+        fetchData('directors', data => autocomplete(document.getElementById('director'), data));
+        fetchData('production_companies', data => autocomplete(document.getElementById('production_company'), data));
+        fetchData('production_countries', data => autocomplete(document.getElementById('production_country'), data));
+        fetchData('actors', data => autocomplete(document.getElementById('actor_1'), data));
+        fetchData('actors', data => autocomplete(document.getElementById('actor_2'), data));
+        fetchData('actors', data => autocomplete(document.getElementById('actor_3'), data));
+    });
+
+    function validateField(input, validList, errorId) {
+        const errorElement = document.getElementById(errorId);
+        if (!validList.includes(input.value)) {
+            errorElement.textContent = 'Please select a valid option.';
+            return false;
+        } else {
+            errorElement.textContent = '';
+            return true;
+        }
+    }
+
+    function submitForm() {
+        const genres = Array.from(document.getElementById('genres').selectedOptions).map(option => option.value);
+        const runtime = parseFloat(document.getElementById('runtime').value);
+        const domesticDistributor = document.getElementById('domestic_distributor').value;
+        const mpaa = document.getElementById('mpaa').value;
+        const budget = parseFloat(document.getElementById('budget').value);
+        const director = document.getElementById('director').value;
+        const productionCompany = document.getElementById('production_company').value;
+        const productionCountry = document.getElementById('production_country').value;
+        const actor1 = document.getElementById('actor_1').value;
+        const actor2 = document.getElementById('actor_2').value;
+        const actor3 = document.getElementById('actor_3').value;
+        const releaseMonth = parseInt(document.getElementById('release_month').value);
+        const voteAverage = parseInt(document.getElementById('vote_average').value);
+        const domesticOpening = parseInt(document.getElementById('domestic_opening').value);
+
+        const data = {
+            genres: [genres],
+            runtime: runtime,
+            domestic_distributor: domesticDistributor,
+            mpaa: mpaa,
+            budget: budget,
+            director: director,
+            production_company: productionCompany,
+            production_country: productionCountry,
+            actor_1: actor1,
+            actor_2: actor2,
+            actor_3: actor3,
+            release_month: releaseMonth,
+            vote_average: voteAverage,
+            domestic_opening: domesticOpening,
+        };
+
+        console.log('Sending data:', data);
+        fetch('http://localhost:5000/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            // Attempt to parse the JSON regardless of status, to handle custom error messages
+            return response.json().then(result => {
+                if (!response.ok) {
+                    // Display any response message (e.g., error field) if the response was not ok
+                    const errorMessage = result.error || 'An unexpected error occurred.';
+                    document.getElementById('result').innerText = errorMessage;
+                    throw new Error(errorMessage);
+                }
+                return result;
+            });
+        })
+        .then(result => {
+            let to = result['to'];
+            if (to == -1) {
+                to = "";
+            } else {
+                to = `to ${to}$`;
+            }
+            document.getElementById('result').innerText = `This film will earn from ${result['from']}$ ${to}`;
+            console.log('Response received:', result);
+        })
+        .catch(error => {
+            // Log the error and display it in the result element
+            console.error('Error:', error);
+            document.getElementById('result').innerText = error.message || 'An error occurred during prediction.';
+        });
+    }
+</script>
+</body>
+</html>

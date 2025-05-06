@@ -5,3 +5,11 @@
 /logs
 /posters
 9304_Muratov.docx
+node_modules
+trailers*
+posters
+unprocessed_data
+/web/__pycache__
+package-lock.json
+package.json
+po_token.json
